@@ -168,6 +168,35 @@ body { font-family: 'Manrope', sans-serif; color: var(--text); }
     </div>
   </div>
 
+  <div id="notif-enable-bar" style="margin:0 16px 10px;background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.3);border-radius:10px;padding:12px 14px;display:none;align-items:center;gap:10px;">
+    <span style="font-size:18px;">🔔</span>
+    <div style="flex:1;font-size:13px;color:#34d399;line-height:1.4;">Включи уведомления, чтобы получать напоминания о задачах</div>
+    <button onclick="enableNotifsClick()" style="background:#34d399;color:#0a0a0f;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;">Включить</button>
+  </div>
+
+  <div id="ai-plan-section" style="margin:0 16px 12px;">
+    <button id="ai-plan-btn" onclick="generateDayPlan()" style="width:100%;padding:13px;background:linear-gradient(135deg,#6c63ff,#a78bfa);border:none;border-radius:14px;color:white;font-size:14px;font-weight:700;font-family:'Manrope';cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+      <span id="ai-plan-icon">🧭</span>
+      <span id="ai-plan-label">Проект 47 — план дня</span>
+    </button>
+    <div id="ai-plan-result" style="display:none;margin-top:10px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;font-size:13.5px;line-height:1.7;color:var(--text);white-space:pre-wrap;"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:6px;">
+      <span onclick="openProfileModal()" style="font-size:12px;color:var(--text3);cursor:pointer;">⚙️ Настроить профиль наставника</span>
+    </div>
+  </div>
+
+  <div id="profile-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:flex-end;justify-content:center;">
+    <div style="background:var(--surface);width:100%;max-width:430px;border-radius:20px 20px 0 0;padding:20px 18px;max-height:85vh;overflow-y:auto;">
+      <div style="font-size:16px;font-weight:700;margin-bottom:4px;">🧭 Профиль наставника «Проект 47»</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:14px;">Вставь сюда свой полный контекст (возраст, цели, ценности, правила) — ИИ будет использовать это при каждом плане дня и вечернем разборе.</div>
+      <textarea id="profile-textarea" placeholder="Опиши себя, свои цели и правила наставника..." style="width:100%;min-height:220px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:12px;font-size:13px;color:var(--text);font-family:'Manrope';resize:vertical;"></textarea>
+      <div style="display:flex;gap:10px;margin-top:14px;">
+        <button onclick="closeProfileModal()" style="flex:1;padding:11px;background:var(--surface2);border:none;border-radius:10px;color:var(--text2);font-size:14px;font-weight:600;cursor:pointer;">Отмена</button>
+        <button onclick="saveProfile()" style="flex:2;padding:11px;background:var(--accent);border:none;border-radius:10px;color:white;font-size:14px;font-weight:700;cursor:pointer;">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
   <div class="tabs">
     <div class="tab active" onclick="switchTab('today')">Сегодня</div>
     <div class="tab" onclick="switchTab('upcoming')">Позже</div>
@@ -485,6 +514,241 @@ if('serviceWorker' in navigator) {
   const swUrl = URL.createObjectURL(blob);
   navigator.serviceWorker.register(swUrl).catch(()=>{});
 }
+
+// ===== Профиль наставника "Проект 47" =====
+const DEFAULT_PROFILE = `Ты мой персональный наставник, стратег, коуч по дисциплине и контролёр выполнения задач.
+
+Моя ситуация:
+- Мужчина, 46 лет.
+- Есть семья и трое детей.
+- Главная цель — построить новую жизнь и реализовать свой потенциал.
+- Сейчас моя уверенность в себе примерно 2/10.
+- Дисциплина примерно 2/10.
+- Способность доводить дела до конца примерно 3/10.
+- Мой главный страх — прожить жизнь ниже своего потенциала.
+- Мои главные ценности: свобода, семья, здоровье, развитие и финансовая независимость.
+- Я хочу стать уверенным, физически сильным, медийным человеком с хорошим доходом.
+- Я хочу выглядеть моложе, иметь спортивное тело и высокий уровень энергии.
+- В будущем хочу путешествовать и обучать людей, но пока не знаю точно чему.
+
+Мои цели до 47 лет:
+1. Привести тело в лучшую форму за последние 15 лет.
+2. Значительно повысить уверенность в себе.
+3. Стать дисциплинированным человеком.
+4. Научиться доводить дела до конца.
+5. Создать личный бренд и стать узнаваемым.
+6. Создать стабильный доход.
+7. Выпустить минимум 300 единиц контента за год.
+
+Твои правила работы:
+1. Каждый день выдавай конкретный план на день.
+2. План должен содержать не более 5 главных задач.
+3. Каждая задача должна быть выполнима за один день.
+4. Все задачи должны вести к моим главным целям.
+5. Не позволяй мне распыляться на новые идеи.
+6. Если я начинаю искать новое направление, напоминай про фокус и долгосрочную цель.
+7. Главный принцип — завершение важнее идеальности.
+8. Напоминай, что уверенность появляется после выполненных действий, а не до них.
+9. Каждый вечер спрашивай: что завершено? что не завершено? что я сделал, несмотря на нежелание?
+10. Если я пропустил день, не ругай меня. Просто помогай вернуться в систему на следующий день.`;
+
+function getProfile() {
+  return localStorage.getItem('mentorProfile') || DEFAULT_PROFILE;
+}
+
+function openProfileModal() {
+  document.getElementById('profile-textarea').value = getProfile();
+  document.getElementById('profile-modal').style.display = 'flex';
+}
+
+function closeProfileModal() {
+  document.getElementById('profile-modal').style.display = 'none';
+}
+
+function saveProfile() {
+  const val = document.getElementById('profile-textarea').value.trim();
+  if(val) localStorage.setItem('mentorProfile', val);
+  closeProfileModal();
+  showToast('✅ Профиль наставника сохранён');
+}
+
+function getEveningLog() {
+  return JSON.parse(localStorage.getItem('eveningLog') || '[]');
+}
+
+function saveEveningEntry(entry) {
+  const log = getEveningLog();
+  log.push(entry);
+  if(log.length > 30) log.shift();
+  localStorage.setItem('eveningLog', JSON.stringify(log));
+}
+
+async function generateDayPlan() {
+  const btn = document.getElementById('ai-plan-btn');
+  const icon = document.getElementById('ai-plan-icon');
+  const label = document.getElementById('ai-plan-label');
+  const result = document.getElementById('ai-plan-result');
+
+  const hour = new Date().getHours();
+  const isEvening = hour >= 18 || hour < 4;
+
+  const allToday = tasks.filter(t => t.date === today());
+  const doneToday = allToday.filter(t => t.done);
+  const pendingToday = allToday.filter(t => !t.done);
+  const profile = getProfile();
+  const currentTime = new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+  const dateLabel = new Date().toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'});
+
+  icon.textContent = '⏳';
+  label.textContent = isEvening ? 'Готовлю вечерний разбор...' : 'Составляю план дня...';
+  btn.style.opacity = '0.7';
+  result.style.display = 'none';
+
+  let prompt;
+  if(isEvening) {
+    const doneList = doneToday.length ? doneToday.map(t=>'- '+t.text).join('\n') : '(ничего не отмечено выполненным)';
+    const pendingList = pendingToday.length ? pendingToday.map(t=>'- '+t.text).join('\n') : '(всё выполнено)';
+    prompt = `${profile}
+
+Сегодня ${dateLabel}, сейчас ${currentTime} — время вечернего разбора дня.
+
+Выполненные задачи сегодня:
+${doneList}
+
+Невыполненные задачи сегодня:
+${pendingList}
+
+Проведи со мной вечерний разбор строго по формату:
+Вечер:
+- Проверка выполнения (короткий честный комментарий по списку)
+- Оценка дня по шкале от 1 до 10
+- Один главный вывод
+- План корректировки на завтра
+
+Тон — поддерживающий, но честный. Если день прошёл слабо — не ругай, помоги вернуться в систему завтра. Напомни, что уверенность появляется после действий, а не до них. Пиши простым текстом без markdown-звёздочек и заголовков с решёткой.`;
+  } else {
+    const taskListStr = pendingToday.length ? pendingToday.map(t => `- ${t.text}${t.time ? ' (время: '+t.time+')' : ''}`).join('\n') : '(список задач на сегодня пуст — предложи задачи исходя из целей)';
+    prompt = `${profile}
+
+Сегодня ${dateLabel}, сейчас ${currentTime} — время утреннего плана.
+
+Текущие задачи в приложении на сегодня:
+${taskListStr}
+
+Составь утренний план строго по формату:
+Утро:
+- Главная цель дня
+- 5 задач дня (используй задачи из списка выше если они есть, при необходимости дополни недостающие категории своими предложениями исходя из целей)
+- 1 задача для тела
+- 1 задача для дохода
+- 1 задача для личного бренда
+- 1 задача для уверенности
+- 1 задача для семьи
+
+Не позволяй мне распыляться на новые направления — если в задачах видно метание между темами, мягко напомни про фокус. Главный принцип: завершение важнее идеальности. Пиши простым текстом без markdown-звёздочек и заголовков с решёткой.`;
+  }
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1200,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+    const data = await response.json();
+    const text = data.content.map(b => b.text || '').join('\n');
+    result.style.display = 'block';
+    result.textContent = text || 'Не получилось получить ответ, попробуй ещё раз.';
+    if(isEvening && text) {
+      saveEveningEntry({ date: today(), time: currentTime, text });
+    }
+  } catch(e) {
+    result.style.display = 'block';
+    result.textContent = '⚠️ Не удалось связаться с ИИ. Проверь подключение к интернету и попробуй снова.';
+  }
+
+  icon.textContent = '🧭';
+  label.textContent = 'Проект 47 — план дня';
+  btn.style.opacity = '1';
+}
+
+// ===== Reminder / notification engine =====
+let notifiedIds = JSON.parse(localStorage.getItem('notifiedIds') || '[]');
+
+function saveNotified() { localStorage.setItem('notifiedIds', JSON.stringify(notifiedIds)); }
+
+async function ensureNotifPermission() {
+  if(!('Notification' in window)) return false;
+  if(Notification.permission === 'granted') return true;
+  if(Notification.permission === 'denied') return false;
+  const p = await Notification.requestPermission();
+  return p === 'granted';
+}
+
+function enableNotifsClick() {
+  if(!('Notification' in window)) {
+    showToast('⚠️ Уведомления не поддерживаются');
+    return;
+  }
+  Notification.requestPermission().then(p => {
+    if(p === 'granted') {
+      document.getElementById('notif-enable-bar').style.display = 'none';
+      showToast('✅ Уведомления включены');
+    } else {
+      showToast('Разрешение не дано');
+    }
+  });
+}
+
+function updateNotifBar() {
+  const bar = document.getElementById('notif-enable-bar');
+  if('Notification' in window && Notification.permission !== 'granted') {
+    bar.style.display = 'flex';
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+function checkReminders() {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mm = String(now.getMinutes()).padStart(2,'0');
+  const nowStr = `${hh}:${mm}`;
+  const todayStr = today();
+
+  tasks.forEach(t => {
+    if(t.done || !t.time) return;
+    const key = t.id + '_' + todayStr + '_' + t.time;
+    if(notifiedIds.includes(key)) return;
+    if(t.time === nowStr) {
+      fireNotification(t);
+      notifiedIds.push(key);
+      saveNotified();
+    }
+  });
+
+  // cleanup old keys (keep list small)
+  if(notifiedIds.length > 200) notifiedIds = notifiedIds.slice(-100);
+}
+
+function fireNotification(task) {
+  if('Notification' in window && Notification.permission === 'granted') {
+    try {
+      const n = new Notification('⏰ Напоминание', { body: task.text, tag: 'task-'+task.id });
+      n.onclick = () => window.focus();
+    } catch(e) {}
+  }
+  showToast('🔔 ' + task.text);
+  // gentle vibration if supported
+  if(navigator.vibrate) navigator.vibrate([120,60,120]);
+}
+
+updateNotifBar();
+setInterval(checkReminders, 15000);
+checkReminders();
 
 renderTasks();
 updateBadge();
